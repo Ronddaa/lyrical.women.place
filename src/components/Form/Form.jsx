@@ -117,14 +117,14 @@ export default function Form() {
         <li>
           <form className={styles.Form} onSubmit={handleSubmit}>
             <h1 className={styles.title}>
-              форма реєстрації на івент “У ліжку з поезією”
+              форма реєстрації на івент “У ліжку <br />з поезією”
             </h1>
             <p className={styles.textName}>by Olimpia Matushevska</p>
             <input
               id="firstName"
               type="text"
               className={styles.inputForm}
-              placeholder="Ім’я"
+              placeholder="Ім’я*"
               value={formData.firstName}
               onChange={handleChange}
               required
@@ -133,7 +133,7 @@ export default function Form() {
               id="lastName"
               type="text"
               className={styles.inputForm}
-              placeholder="Прізвище"
+              placeholder="Прізвище*"
               value={formData.lastName}
               onChange={handleChange}
               required
@@ -142,7 +142,7 @@ export default function Form() {
               id="email"
               type="email"
               className={styles.inputForm}
-              placeholder="Email"
+              placeholder="Email*"
               value={formData.email}
               onChange={handleChange}
               required
@@ -151,7 +151,7 @@ export default function Form() {
               id="phone"
               type="tel"
               className={styles.inputForm}
-              placeholder="Телефон"
+              placeholder="Телефон*"
               value={formData.phone}
               onChange={handleChange}
               required
@@ -160,7 +160,7 @@ export default function Form() {
               id="telegramNick"
               type="text"
               className={styles.inputForm}
-              placeholder="telegram"
+              placeholder="Telegram"
               value={formData.telegramNick}
               onChange={handleChange}
             />

@@ -9,6 +9,16 @@
     height: 100dvh;
     padding: 20px;
 }
+.ThankYouSection div{
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    text-align: center;
+    justify-content: center;
+}
+.imgggg{
+    display: none;
+}
 .title{
     font-size: 28px;
     font-weight: 600;
@@ -31,4 +41,32 @@
     color: #2B3F1C;
     justify-content: center;
     border-radius: 10px;
+    text-transform: uppercase;
+}
+
+@media(min-width:768px){
+    .ThankYouSection{
+        flex-direction: row;
+        gap: 100px;
+    }
+    .imgggg{
+        display: block;
+    }
+    .title{
+        font-size: 60px;
+        text-align: left;
+        max-width: 90%;
+
+    }
+    .text{
+        font-size: 28px;
+        max-width: 433px;
+        text-align: left;
+        margin: 0 0 30px;
+    }
+    .linkToTelegram{
+        font-size: 22px;
+        padding: 33px 100px;
+        max-width: 373px;
+    }
 }
