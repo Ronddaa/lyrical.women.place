@@ -1,0 +1,85 @@
+@font-face {
+  font-family: 'Quentin';
+  src: url('./assets/fonts/Quentin.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: "Cormorant Garamond";
+  font-style: normal;
+  font-weight: 600;
+  src: url("./assets/fonts/CormorantGaramond-SemiBold.woff2") format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: "Cormorant Garamond";
+  font-style: normal;
+  font-weight: 400;
+  src: url("./assets/fonts/CormorantGaramond-Regular.woff2") format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: "Montserrat";
+  font-style: normal;
+  font-weight: 400;
+  src: url("./assets/fonts/Montserrat-Regular.woff2") format("woff2"); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+html {
+  scroll-behavior: smooth; /* Для плавного скролла по якорям и по сайту */
+  scrollbar-gutter: stable;
+  font-family: "Montserrat", sans-serif;
+  height: 100%;
+}
+#root{
+  height: 100%;
+}
+body{
+  margin: 0 auto;
+}
+div {
+  position: relative;
+}
+section {
+  position: relative; /* MOBILE */
+  padding: 50px;
+  overflow: hidden;
+}
+ul,
+ol {
+  list-style: none; /* Убираем базовые цифры и пометки списков */
+  padding: 0;
+  margin: 0;
+}
+a {
+  text-decoration: none; /* Убираем подчеркивание ссылок */
+}
+p, li, a{
+  white-space: pre-line;
+}
+button {
+  cursor: pointer; /* Добавляем палец при наведении на кнопку */
+}
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+h1, h2, h3, h4, h5, h6{
+  font-family: "Cormorant Garamond";
+  font-weight: 600;
+  text-transform: uppercase;
+}
+button{
+  font-family: "Cormorant Garamond";
+  font-weight: 600;
+  transition: 0.3s;
+}

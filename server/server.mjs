@@ -4,36 +4,34 @@ import axios from "axios";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 
-// Импорты для MongoDB и ваших сервисов
 import env from "./utils/env.js";
+import cookieParser from "cookie-parser";
 import initMongoConnection from "./db/initMongoConnection.js";
-import router from "./routers/index.js"; // Оставляем ваш роутер
-import { errorHandler } from "./middlewares/errorHandler.js"; // Оставляем ваш errorHandler
+import router from "./routers/index.js";
+import { errorHandler } from "./middlewares/errorHandler.js";
 import {
   upsertunifieduser,
   updateunifieduserById,
 } from "./services/unifiedusers.js";
-import { unifiedusersCollection } from "./db/models/unifiedusers.js";
 import { utmTracker } from "./middlewares/utmMarks.js";
+import { unifiedusersCollection } from "./db/models/unifiedusers.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Подключаемся к базе данных
 await initMongoConnection();
 
 const app = express();
 
-// Настройки CORS
 const allowedOrigins = [
   "https://lyrical.women.place",
   "http://localhost:5173",
   "http://localhost:5174",
-  "http://127.1.2.122:3000",
+  "http://127.1.4.138:3000",
 ];
 
 const corsOptions = {
-  origin: (origin, callback) => {
+  origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -48,13 +46,11 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser());
 
-// Middlewares
 app.use(utmTracker);
-// Подключаем роутер для /api
 app.use("/api", router);
 
-// Константы для Monobank
 const monoBankToken = env("MONOBANK_TOKEN");
 const monoBankRedirectUrl = env(
   "MONOBANK_REDIRECT_URL",
@@ -64,6 +60,7 @@ const monoBankWebhookUrl = env(
   "MONOBANK_WEBHOOK_URL",
   "https://lyrical.women.place/api/payment-callback"
 );
+
 const PORT = env("PORT", 3000);
 const HOST = env("HOST", "0.0.0.0");
 
@@ -81,27 +78,35 @@ app.post("/api/create-payment", async (req, res, next) => {
       .json({ error: "Missing required fields or invalid format" });
   }
 
-  const purchase = conferences[0];
-
   try {
-    if (typeof purchase.totalAmount !== "number" || purchase.totalAmount <= 0) {
-      return res.status(400).json({ error: "Некорректная сумма для оплаты" });
-    }
+    const fixedAmountUAH = 1500 * 100;
 
     const { unifieduser, conferenceIndex } = await upsertunifieduser({
       user,
       conferences,
     });
+    const conferenceId = unifieduser.conferences[conferenceIndex]._id; // Эта строка была удалена, но её лучше вернуть, чтобы использовать в merchantPaymInfo
 
     const redirectUrl = monoBankRedirectUrl;
-    const monoResponse = await axios.post(
-      "[https://api.monobank.ua/api/merchant/invoice/create](https://api.monobank.ua/api/merchant/invoice/create)",
-      {
-        amount: purchase.totalAmount, // Используем сумму из запроса
-        ccy: 980,
-        redirectUrl,
-        webHookUrl: monoBankWebhookUrl,
+
+    // ⬅️ Объявляем объект body здесь
+    const body = {
+      amount: fixedAmountUAH,
+      ccy: 980,
+      redirectUrl,
+      webHookUrl: monoBankWebhookUrl,
+      merchantPaymInfo: {
+        // Добавляем merchantPaymInfo обратно
+        reference: `conf-${conferenceId}-${Date.now()}`,
+        destination: `Оплата участия в конференции "${conferences[0].conference}"`,
       },
+    };
+
+    console.log("📤 Запрос в Monobank:", JSON.stringify(body, null, 2));
+
+    const monoResponse = await axios.post(
+      "https://api.monobank.ua/api/merchant/invoice/create",
+      body, // ⬅️ Используем объявленный объект body
       {
         headers: {
           "X-Token": monoBankToken,
@@ -109,6 +114,8 @@ app.post("/api/create-payment", async (req, res, next) => {
         },
       }
     );
+
+    console.log("✅ Ответ Monobank:", monoResponse.data);
 
     const paymentData = {
       invoiceId: monoResponse.data.invoiceId,
@@ -126,61 +133,51 @@ app.post("/api/create-payment", async (req, res, next) => {
       pageUrl: monoResponse.data.pageUrl,
     });
   } catch (error) {
-    console.error("Ошибка при создании оплаты:", error);
+    console.error(
+      "❌ Ошибка при создании оплаты:",
+      error.response?.data || error.message
+    );
     next(error);
   }
 });
 
+// ---------- Callback MonoBank ----------
 app.post("/api/payment-callback", async (req, res, next) => {
   const { invoiceId, status } = req.body;
-
   if (!invoiceId || !status) {
-    console.log("Missing invoiceId or status in callback.");
     return res.status(400).json({ error: "Missing invoiceId or status" });
   }
-
   try {
-    const unifieduser = await unifiedusersCollection.findOne({
-      "conferences.paymentData.invoiceId": invoiceId,
-    });
-
-    if (!unifieduser) {
-      console.log("Invoice not found for invoiceId:", invoiceId);
-      return res.status(404).json({ error: "Invoice not found" });
-    }
-
     const statusMap = {
       success: "paid",
       pending: "pending",
       failure: "failed",
     };
     const monoStatus = status.toLowerCase();
+    const newPaymentStatus = statusMap[monoStatus] || "failed";
 
-    const conferenceToUpdate = unifieduser.conferences.find(
-      (conf) => conf.paymentData?.invoiceId === invoiceId
+    const updatedUser = await unifiedusersCollection.findOneAndUpdate(
+      { "conferences.paymentData.invoiceId": invoiceId },
+      { $set: { "conferences.$[conf].paymentData.status": newPaymentStatus } },
+      { arrayFilters: [{ "conf.paymentData.invoiceId": invoiceId }], new: true }
     );
 
-    if (conferenceToUpdate) {
-      conferenceToUpdate.paymentData.status = statusMap[monoStatus] || "failed";
-      await updateunifieduserById(unifieduser._id, {
-        conferences: unifieduser.conferences,
-      });
-      console.log(
-        `Unified user ${unifieduser._id} saved successfully AFTER payment callback.`
-      );
-    } else {
-      console.warn(
-        `⚠️ Конференция с invoiceId ${invoiceId} не найдена в unifieduser ${unifieduser._id}`
-      );
+    if (!updatedUser) {
+      console.error(`❌ Ошибка: Инвойс с ID ${invoiceId} не найден.`);
+      return res.status(404).json({ error: "Invoice not found" });
     }
 
+    console.log(
+      `✅ Статус оплаты для пользователя ${updatedUser._id} обновлен до: ${newPaymentStatus}`
+    );
     res.status(200).json({ message: "Payment status updated" });
   } catch (error) {
-    console.error("Error in payment-callback:", error);
+    console.error("❌ Ошибка в payment-callback:", error);
     next(error);
   }
 });
 
+// ---------- Статика и SPA ----------
 const staticFilesPath = join(__dirname, "../");
 
 app.use(
@@ -197,9 +194,8 @@ app.get("/*", (req, res) => {
   res.sendFile(join(staticFilesPath, "index.html"));
 });
 
-// Обработчик ошибок
 app.use(errorHandler);
 
-app.listen(PORT, HOST, async () => {
+app.listen(PORT, HOST, () => {
   console.log(`Сервер запущен по адресу: http://${HOST}:${PORT}`);
 });

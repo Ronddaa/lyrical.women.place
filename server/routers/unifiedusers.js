@@ -5,6 +5,7 @@ import {
   createunifieduserController,
   getAllunifiedusersController,
   getunifieduserByIdController,
+  sendTicketToUserController,
 } from "../controllers/unifiedusers.js";
 import { validateBody } from "../middlewares/validateBody.js";
 import { createunifieduserSchema } from "../validation/unifiedusers.js";
@@ -50,6 +51,11 @@ router.post(
   "/", // Было "/unifiedusers"
   validateBody(createunifieduserSchema),
   ctrlWrapper(createunifieduserController)
+);
+
+router.post(
+  "/sendTicket/:id", // Было "/unifiedusers/sendTicket/:id"
+  ctrlWrapper(sendTicketToUserController)
 );
 
 export default router;

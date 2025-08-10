@@ -1,0 +1,86 @@
+.FormSection{
+    height: 100dvh;
+    width: 100%;
+    padding: 20px;
+}
+.wrapperForm{
+    display: flex;
+}
+.wrapperIMG{
+    display: none;
+}
+.Form{
+    width: 80%;
+    height: 80%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.title{
+    font-size: 32px;
+    font-weight: 600;
+    text-transform: uppercase;
+    text-align: center;
+    color: #2B3F1C;
+}
+.textName{
+    font-family: "Quentin";
+    font-size: 22px;
+    text-align: center;
+    color: #2B3F1C;
+    margin-bottom: 24px;
+}
+.inputForm{
+    padding: 14px 20px;
+    border: 1px solid #2B3F1C;
+    border-radius: 10px;
+    background-color: #2B3F1C33;
+    margin-bottom: 10px;
+    width: 100%;
+}
+.sendBtnForm{
+    padding: 27px 90px;
+    width: 100%;
+    text-align: center;
+    text-transform: uppercase;
+    color: #ffffff;
+    font-size: 14px;
+    background-color: #2B3F1C;
+    border-radius: 10px;
+    border: none;
+}
+.sendBtnForm:disabled{
+    background-color: #353a31;
+}
+
+@media(min-width:768px){
+    .wrapperForm{
+        align-items: center;
+    }
+    .wrapperIMG{
+        display: block;
+    }
+    .Form{
+        position: relative;
+        top: 0;
+        left: 0;
+        transform: translate(0, 0);
+    }
+    .title{
+        font-size: 3.55vw;
+        text-align: left;
+    }
+    .textName{
+        font-size: 50px;
+        text-align: left;
+    }
+    .inputForm{
+        width: 70%;
+    }
+    .sendBtnForm{
+        width: 373px;
+        font-size: 22px;
+        margin-top: 20px;
+    }
+}
